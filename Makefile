@@ -1,4 +1,6 @@
-all: geoserver pipeline db web docs api
+all: geoserver logic db web docs api
+
+build: all
 
 geoserver:
 	echo "[Building] GeoServer OGC-Compliant Server."
@@ -25,17 +27,24 @@ api:
 	cd lfmc-api && make
 
 
-push:
+install:
 	echo "[Pushing to Docker] LFMC Project."
-	docker push anthonyrawlinsuom/lfmc-api:latest
-	docker push anthonyrawlinsuom/lfmc-mongodb:latest
-	docker push anthonyrawlinsuom/lfmc-pipeline:latest
-	docker push anthonyrawlinsuom/lfmc-staging:latest
-	docker push anthonyrawlinsuom/lfmc-docs:latest
-	docker push anthonyrawlinsuom/lfmc-geoserver:latest
+	cd lfmc-geoserver && make install
+	cd lfmc-pipeline && make install
+	cd lfmc-mongodb && make install
+	cd lfmc-staging && make install
+	cd lfmc-docs && make install
+	cd lfmc-api && make install
 	echo "[OK] Ready to Run with 'docker-compose up'."
 	
 clean:
+#	docker-compose down
+#	docker stop anthonyrawlinsuom/lfmc-api
+#	docker stop anthonyrawlinsuom/lfmc-mongodb
+#	docker stop anthonyrawlinsuom/lfmc-pipeline
+#	docker stop anthonyrawlinsuom/lfmc-staging
+#	docker stop anthonyrawlinsuom/lfmc-docs
+#	docker stop anthonyrawlinsuom/lfmc-geoserver
 	cd lfmc-api && make clean
 	cd lfmc-docs && make clean
 	cd lfmc-staging && make clean
