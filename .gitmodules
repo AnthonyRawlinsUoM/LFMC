@@ -8,3 +8,5 @@
 	url = https://github.com/AnthonyRawlinsUoM/lfmc-geoserver.git
 [submodule "lfmc-docs"]
 	url = https://github.com/AnthonyRawlinsUoM/lfmc-docs.git
+[submodule "lfmc-api"]
+	url = https://github.com/AnthonyRawlinsUoM/lfmc-api.git
