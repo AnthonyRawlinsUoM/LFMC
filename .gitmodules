@@ -2,3 +2,5 @@
 	url = https://github.com/AnthonyRawlinsUoM/lfmc-staging.git
 [submodule "lfmc-pipeline"]
 	url = https://github.com/AnthonyRawlinsUoM/lfmc-pipeline.git
+[submodule "lfmc-mongodb"]
+	url = https://github.com/AnthonyRawlinsUoM/lfmc-mongodb.git
