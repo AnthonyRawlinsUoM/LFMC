@@ -6,3 +6,5 @@
 	url = https://github.com/AnthonyRawlinsUoM/lfmc-mongodb.git
 [submodule "lfmc-geoserver"]
 	url = https://github.com/AnthonyRawlinsUoM/lfmc-geoserver.git
+[submodule "lfmc-docs"]
+	url = https://github.com/AnthonyRawlinsUoM/lfmc-docs.git
