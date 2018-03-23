@@ -1,14 +1,15 @@
 # Docker Compose Version
-version: '2'
+version: '3.5'
 services:
     
     # MongoDB image
     nosql:
         image: anthonyrawlinsuom/lfmc-mongodb
+        build: lfmc-mongodb
         networks:
-          - backend
+          - middleware
         ports:
-          - 27017:27017
+          - "27017:27017"
         volumes:
           - /srv/docker/mongodb:/var/lib/mongodb
         restart: always
@@ -16,12 +17,14 @@ services:
     # Node-RED
     pipeline:
         image: anthonyrawlinsuom/lfmc-pipeline
+        build: lfmc-pipeline
         restart: on-failure
         networks:
           - frontend
+          - middleware
           - backend
         ports:
-          - 1880:1880
+          - "1880:1880"
         depends_on:
           - nosql
     
@@ -29,19 +32,32 @@ services:
     postgis:
         image: kartoza/postgis:9.4-2.1
         networks:
-          - backend
+          - middleware
         ports:
-          - 5432:5432
+          - "5432:5432"
     
-    # GeoMESA / GeoServer
-    geoserver:
-        image: anthonyrawlinsuom/lfmc-geoserver
+    # GeoMESA
+    geomesa:
+        image: quay.io/geomesa/geoserver:geomesa-1.3.2-accumulo-1.7.3
         restart: on-failure
         networks:
           - frontend
-          - backend
+          - middleware
+        volumes:
+          - /media/arawlins/Backups/DataSources/geoserver_data:/opt/geoserver/data_dir
         ports:
-          - 9090:9090
+          - "9090:9090"
+    
+    # GeoServer
+    geoserver:
+        image: anthonyrawlinsuom/lfmc-geoserver
+        build: lfmc-geoserver
+        restart: on-failure
+        networks:
+          - frontend
+          - middleware
+        ports:
+          - "8080:8080"
         volumes:
           - /media/arawlins/Backups/DataSources/geoserver_data:/opt/geoserver/data_dir
         depends_on:
@@ -56,7 +72,7 @@ services:
         environment:
           HADOOP_MASTER_ADDRESS: hdfs-name
         ports:
-          - 50070:50070
+          - "50070:50070"
     
     hdfs-data:
         image: quay.io/geomesa/hdfs:geomesa-1.3.2-accumulo-1.7.3
@@ -74,7 +90,7 @@ services:
         networks:
           - backend
         ports:
-          - 2181:2181
+          - "2181:2181"
     
     # Accumulo
     accumulo-master:
@@ -82,6 +98,7 @@ services:
       command: master --auto-init
       networks:
         - backend
+        - middleware
       environment:
         HADOOP_MASTER_ADDRESS: hdfs-name
         ZOOKEEPERS: zookeeper
@@ -98,8 +115,8 @@ services:
           HADOOP_MASTER_ADDRESS: hdfs-name
           ZOOKEEPERS: zookeeper
         ports:
-          - 9995:9995
-          - 50095:50095
+          - "9995:9995"
+          - "50095:50095"
         depends_on:
           - zookeeper
           - accumulo-master
@@ -119,15 +136,16 @@ services:
     # LFMCv1 API
     api:
         image: anthonyrawlinsuom/lfmc-api
+        build: lfmc-api
         restart: on-failure
         # deploy:
         #     mode: replicated
         #     replicas: 3
         #     endpoint_mode: dnsrr
         networks:
-          - frontend
+          - middleware
         ports:
-          - 8000:8000
+          - "8002:8002"
         depends_on:
           - pipeline
           - geoserver
@@ -135,35 +153,47 @@ services:
     # LFMCv1 Website #NodeJS #Angular4
     webserver:
         image: anthonyrawlinsuom/lfmc-staging
+        build: lfmc-staging
         restart: on-failure
         # deploy:
         #    endpoint_mode: vip
         #    replicas: 5
         networks:
           - frontend
+          - middleware
         ports:
-          - 3000:3000
+          - "4200:4200"
+          - "3000:3000"
         depends_on:
           - api
+          - geoserver
     
     # ReadTheDocs
-    docs:
+    documentation:
+        # image: anthonyrawlinsuom/lfmc-docs
         image: anthonyrawlinsuom/lfmc-docs
+        command: serve -a 0.0.0.0:8000
         restart: on-failure
         networks:
           - frontend
         ports:
-          - 8001:8001
+          - "8000:8000"
+
+volumes:
+    docs_dir:
+        
 
 networks:
-    frontend:
+    middleware:
         driver: bridge
-        # attachable: true
         ipam:
             driver: default
 
+    frontend:
+        driver: bridge
+        ipam:
+            driver: default
     backend:
         driver: bridge
-        # attachable: true
         ipam:
             driver: default
