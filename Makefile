@@ -1,17 +1,39 @@
-all: geoserver logic db web docs api
+all: geoserver logic nosql web docs api
+
+pull:
+	docker pull anthonyrawlinsuom/lfmc-api
+	docker pull anthonyrawlinsuom/lfmc-geoserver
+	docker pull anthonyrawlinsuom/lfmc-staging
+	docker pull anthonyrawlinsuom/lfmc-pipeline
+	docker pull anthonyrawlinsuom/lfmc-docs
+	docker pull anthonyrawlinsuom/lfmc-mongodb
 
 build: all
 
 geoserver:
 	echo "[Building] GeoServer OGC-Compliant Server."
+	# if [[ "${LFMC_GEOSERVER_DATA_DIR}" = ""]]; then \
+	# 	printf "Using %s as Data directory." "$(readlink -e ${LFMC_GEOSERVER_DATA_DIR})" \
+	# else \
+	# 	echo "Setting default location for LFMC_GEOSERVER_DATA_DIR..." \
+	# 	export LFMC_GEOSERVER_DATA_DIR=$(readlink -e ./Spatial/geoserver_data) \
+	# 	printf "LFMC_GEOSERVER_DATA_DIR is set to: %s\n" "${LFMC_GEOSERVER_DATA_DIR}" \
+	# fi;
 	cd lfmc-geoserver && make
 
 logic:
 	echo "[Building] LFMC Pipeline (Node-RED)."
 	cd lfmc-pipeline && make
 
-db:
+nosql:
 	echo "[Building] LFMC MongoDB (NoSQL Database)."
+	# if [[ "${LFMC_MONGODB_DATA_DIR}" = ""]]; then \
+	# 	printf "Using %s as Data directory." "$(readlink -e ${LFMC_MONGODB_DATA_DIR})" \
+	# else \
+	# 	echo "Setting default location for LFMC_MONGODB_DATA_DIR..." \
+	# 	export LFMC_MONGODB_DATA_DIR=$(readlink -e ./Index/mongodb) \
+	# 	printf "LFMC_MONGODB_DATA_DIR is set to: %s\n" "${LFMC_MONGODB_DATA_DIR}" \
+	# fi;
 	cd lfmc-mongodb && make
 
 web:
@@ -26,7 +48,16 @@ api:
 	echo "[Building] LFMC API (WSGI RESTful)."
 	cd lfmc-api && make
 
-
+pull:
+	echo "[Pulling from Docker.io] LFMC Project."
+	cd lfmc-geoserver && make pull
+	cd lfmc-pipeline && make pull
+	cd lfmc-mongodb && make pull
+	cd lfmc-staging && make pull
+	cd lfmc-docs && make pull
+	cd lfmc-api && make pull
+	echo "[OK] Ready to Run with 'kompose up'."
+	
 install:
 	echo "[Pushing to Docker] LFMC Project."
 	cd lfmc-geoserver && make install

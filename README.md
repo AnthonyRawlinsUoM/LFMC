@@ -13,6 +13,8 @@ Docker (http://docker.com/)
 ### To make the project:
     $ cd <install-dir>
     $ make
+
+### To commit changes to the Docker.io Repo:
     $ make install
 
 ### To run the project locally
@@ -32,12 +34,12 @@ See: [Docker Compose Documentation](https://docs.docker.com/compose/reference/ov
 
 
 ### Ports used by the project
-  - 3000  -> Web Server (express)
-  - 4200  -> Web Server (ng serve)
-  - 8001  -> Documentation Website
+  - 3000  -> Web Server (Deployment)
+  - 4200  -> Web Server (Development)
+  - 8000  -> Documentation Website
   - 8002  -> LFMC API (REST)
-  - 8080  -> TOMCAT
-  - 9090  -> GeoServer
+  - 8080  -> GeoServer
+  - 9090  -> GeoServer (GeoMesa version)
   - 27017 -> MongoDB
 
 # Caveats with local docker experimentation

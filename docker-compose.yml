@@ -1,11 +1,11 @@
 # Docker Compose Version
-version: '3.5'
+version: '3'
 services:
     
     # MongoDB image
     nosql:
         image: anthonyrawlinsuom/lfmc-mongodb
-        build: lfmc-mongodb
+        # build: lfmc-mongodb
         networks:
           - middleware
         ports:
@@ -17,7 +17,7 @@ services:
     # Node-RED
     pipeline:
         image: anthonyrawlinsuom/lfmc-pipeline
-        build: lfmc-pipeline
+        # build: lfmc-pipeline
         restart: on-failure
         networks:
           - frontend
@@ -44,14 +44,14 @@ services:
           - frontend
           - middleware
         volumes:
-          - /media/arawlins/Backups/DataSources/geoserver_data:/opt/geoserver/data_dir
+          - ./Spatial/geoserver_data:/opt/geoserver/data_dir
         ports:
           - "9090:9090"
     
     # GeoServer
     geoserver:
         image: anthonyrawlinsuom/lfmc-geoserver
-        build: lfmc-geoserver
+        # build: lfmc-geoserver
         restart: on-failure
         networks:
           - frontend
@@ -59,7 +59,7 @@ services:
         ports:
           - "8080:8080"
         volumes:
-          - /media/arawlins/Backups/DataSources/geoserver_data:/opt/geoserver/data_dir
+          - ./Spatial/geoserver_data:/opt/geoserver/data_dir
         depends_on:
           - postgis
     
@@ -136,7 +136,7 @@ services:
     # LFMCv1 API
     api:
         image: anthonyrawlinsuom/lfmc-api
-        build: lfmc-api
+        # build: lfmc-api
         restart: on-failure
         # deploy:
         #     mode: replicated
@@ -151,22 +151,21 @@ services:
           - geoserver
     
     # LFMCv1 Website #NodeJS #Angular4
-    webserver:
-        image: anthonyrawlinsuom/lfmc-staging
-        build: lfmc-staging
-        restart: on-failure
-        # deploy:
-        #    endpoint_mode: vip
-        #    replicas: 5
-        networks:
-          - frontend
-          - middleware
-        ports:
-          - "4200:4200"
-          - "3000:3000"
-        depends_on:
-          - api
-          - geoserver
+    # webserver:
+    #     image: anthonyrawlinsuom/lfmc-staging
+    #     build: lfmc-staging
+    #     restart: on-failure
+    #     # deploy:
+    #     #    endpoint_mode: vip
+    #     #    replicas: 5
+    #     networks:
+    #       - frontend
+    #       - middleware
+    #     ports:
+    #       - "3000:3000"
+    #     depends_on:
+    #       - api
+    #       - geoserver
     
     # ReadTheDocs
     documentation:
