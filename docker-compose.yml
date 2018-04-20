@@ -2,6 +2,18 @@
 version: '3'
 services:
     
+    # Notebooks for Apache Spark - See:
+    # https://github.com/jupyter/docker-stacks
+    notebooks:
+        image: anthonyrawlinsuom/lfmc-notebooks
+        networks:
+            - frontend
+        ports:
+          - "8888:8888"
+          - "4040-4080:4040-4080"
+        volumes:
+          - /media/arawlins/Work/LFMC/lfmc-notebooks/notebooks:/home/jovyan/work/notebooks/
+    
     # MongoDB image
     nosql:
         image: anthonyrawlinsuom/lfmc-mongodb
@@ -10,8 +22,9 @@ services:
           - middleware
         ports:
           - "27017:27017"
+          - "28017:28017"
         volumes:
-          - /srv/docker/mongodb:/var/lib/mongodb
+          - /media/arawlins/Work/NFSexports/Index/mongodb:/var/lib/mongodb
         restart: always
     
     # Node-RED
@@ -44,7 +57,7 @@ services:
           - frontend
           - middleware
         volumes:
-          - ./Spatial/geoserver_data:/opt/geoserver/data_dir
+          - /media/arawlins/Backup/DataSources/geomesa_data:/opt/geoserver/data_dir
         ports:
           - "9090:9090"
     
@@ -59,7 +72,7 @@ services:
         ports:
           - "8080:8080"
         volumes:
-          - ./Spatial/geoserver_data:/opt/geoserver/data_dir
+          - /media/arawlins/Work/NFSexports/Spatial/geoserver_data:/opt/geoserver/data_dir
         depends_on:
           - postgis
     
@@ -146,6 +159,8 @@ services:
           - middleware
         ports:
           - "8002:8002"
+        volumes:
+          - /media/arawlins/Backups/DataSources/geoserver_data/FuelModels/:/FuelModels/
         depends_on:
           - pipeline
           - geoserver

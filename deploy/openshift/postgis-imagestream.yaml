@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ImageStream
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: postgis
+  name: postgis
+spec:
+  tags:
+  - annotations: null
+    from:
+      kind: DockerImage
+      name: kartoza/postgis:9.4-2.1
+    generation: null
+    importPolicy: {}
+    name: 9.4-2.1
+status:
+  dockerImageRepository: ""
