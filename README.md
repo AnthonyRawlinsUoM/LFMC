@@ -5,7 +5,7 @@
 
 See the lfmc-docs sub-folder, or go to:
 - [GitHub](https://github.com/anthonyrawlinsuom/lfmc-docs)
-- [LFMC Documentation Site](http://docs.lfmc.unimelb.edu.au/)
+- [LFMC Documentation Site](http://documentation.landscapefuelmoisture.bushfirebehaviour.net.au/)
 
 ### Requirements
 Docker (http://docker.com/)
