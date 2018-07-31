@@ -1,0 +1,13 @@
+version: 3.5
+services:
+    simplifyr:
+        image: anthonyrawlinsuom/lfmc-simplifyr:latest
+        ports:
+          - "8003:8000"
+        volumes:
+          - /Scratch/Spatial_Data_Testing:/Spatial_Data
+
+        networks:
+          - frontend
+        environment:
+          - VIRTUAL_HOST=simplifyr.landscapefuelmoisture.bushfirebehaviour.net.au

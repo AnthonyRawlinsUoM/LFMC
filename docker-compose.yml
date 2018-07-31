@@ -1,6 +1,18 @@
 # Docker Compose Version
-version: '3'
+version: '3.3'
 services:
+    
+    # For specific information on setting file upload size on a per-Virtual host
+    # basis please see: https://github.com/schmunk42/nginx-proxy#proxy-wide
+    proxy:
+        image: jwilder/nginx-proxy:latest
+        ports:
+          - "80:80"
+        volumes:
+          - /var/run/docker.sock:/tmp/docker.sock:ro
+          - /Work/LFMC/proxy-config:/etc/nginx/vhost.d:ro
+        networks:
+          - frontend
     
     # Notebooks for Apache Spark - See:
     # https://github.com/jupyter/docker-stacks
@@ -12,7 +24,11 @@ services:
           - "8888:8888"
           - "4040-4080:4040-4080"
         volumes:
-          - /media/arawlins/Work/LFMC/lfmc-notebooks/notebooks:/home/jovyan/work/notebooks/
+          - /Work/LFMC/lfmc-notebooks/notebooks:/home/jovyan/work/notebooks/
+          - /Scratch/DataSources/geoserver_data/FuelModels/:/home/jovyan/work/notebooks/FuelModels/
+        environment:
+          - VIRTUAL_HOST=notebooks.landscapefuelmoisture.bushfirebehaviour.net.au
+          - VIRTUAL_PORT=8888
     
     # MongoDB image
     nosql:
@@ -20,12 +36,16 @@ services:
         # build: lfmc-mongodb
         networks:
           - middleware
+          - frontend
         ports:
           - "27017:27017"
           - "28017:28017"
         volumes:
-          - /media/arawlins/Work/NFSexports/Index/mongodb:/var/lib/mongodb
+          - /Work/Index/mongodb:/var/lib/mongodb
         restart: always
+        environment:
+          - VIRTUAL_HOST=nosql.landscapefuelmoisture.bushfirebehaviour.net.au
+          - VIRTUAL_PORT=27017
     
     # Node-RED
     pipeline:
@@ -37,9 +57,17 @@ services:
           - middleware
           - backend
         ports:
-          - "1880:1880"
+            - "1880:1880"
         depends_on:
           - nosql
+          - simplifyr
+        volumes:
+          - /Scratch/DataSources/geoserver_data/FuelModels/Weather:/mnt/data_dir
+          - /Scratch/DataSources/geoserver_data/FuelModels/AWRA-L:/mnt/awra_dir
+          - /Scratch/DataSources/geoserver_data/FuelModels/queries:/mnt/queries
+        environment:
+          - VIRTUAL_HOST=pipeline.landscapefuelmoisture.bushfirebehaviour.net.au
+          - VIRTUAL_PORT=1880
     
     # PostGIS
     postgis:
@@ -48,18 +76,8 @@ services:
           - middleware
         ports:
           - "5432:5432"
-    
-    # GeoMESA
-    geomesa:
-        image: quay.io/geomesa/geoserver:geomesa-1.3.2-accumulo-1.7.3
-        restart: on-failure
-        networks:
-          - frontend
-          - middleware
-        volumes:
-          - /media/arawlins/Backup/DataSources/geomesa_data:/opt/geoserver/data_dir
-        ports:
-          - "9090:9090"
+        environment:
+          - VIRTUAL_HOST=postgis.landscapefuelmoisture.bushfirebehaviour.net.au
     
     # GeoServer
     geoserver:
@@ -69,130 +87,99 @@ services:
         networks:
           - frontend
           - middleware
-        ports:
-          - "8080:8080"
         volumes:
-          - /media/arawlins/Work/NFSexports/Spatial/geoserver_data:/opt/geoserver/data_dir
+          - /Scratch/DataSources/geoserver_data:/opt/geoserver/data_dir
         depends_on:
           - postgis
-    
-    # Hadoop
-    hdfs-name:
-        image: quay.io/geomesa/hdfs:geomesa-1.3.2-accumulo-1.7.3
-        command: name
-        networks:
-          - backend
         environment:
-          HADOOP_MASTER_ADDRESS: hdfs-name
-        ports:
-          - "50070:50070"
-    
-    hdfs-data:
-        image: quay.io/geomesa/hdfs:geomesa-1.3.2-accumulo-1.7.3
-        command: data
-        networks:
-          - backend
-        environment:
-          HADOOP_MASTER_ADDRESS: hdfs-name
-        depends_on:
-          - hdfs-name
-    
-    # ZooKeeper
-    zookeeper:
-        image: quay.io/geomesa/zookeeper:latest
-        networks:
-          - backend
-        ports:
-          - "2181:2181"
-    
-    # Accumulo
-    accumulo-master:
-      image: quay.io/geomesa/accumulo-geomesa:geomesa-1.3.2-accumulo-1.7.3
-      command: master --auto-init
-      networks:
-        - backend
-        - middleware
-      environment:
-        HADOOP_MASTER_ADDRESS: hdfs-name
-        ZOOKEEPERS: zookeeper
-        ACCUMULO_PASSWORD: GisPwd
-      depends_on:
-        - zookeeper
-    
-    accumulo-monitor:
-        image: quay.io/geomesa/accumulo-geomesa:geomesa-1.3.2-accumulo-1.7.3
-        command: monitor
-        networks:
-          - backend
-        environment:
-          HADOOP_MASTER_ADDRESS: hdfs-name
-          ZOOKEEPERS: zookeeper
-        ports:
-          - "9995:9995"
-          - "50095:50095"
-        depends_on:
-          - zookeeper
-          - accumulo-master
-    
-    accumulo-tserver:
-        image: quay.io/geomesa/accumulo-geomesa:geomesa-1.3.2-accumulo-1.7.3
-        command: tserver
-        networks:
-          - backend
-        environment:
-          HADOOP_MASTER_ADDRESS: hdfs-name
-          ZOOKEEPERS: zookeeper
-        depends_on:
-          - zookeeper
-          - accumulo-master
+          - VIRTUAL_HOST=geoserver.landscapefuelmoisture.bushfirebehaviour.net.au
+          - VIRTUAL_PORT=8080
     
     # LFMCv1 API
     api:
         image: anthonyrawlinsuom/lfmc-api
-        # build: lfmc-api
         restart: on-failure
-        # deploy:
-        #     mode: replicated
-        #     replicas: 3
-        #     endpoint_mode: dnsrr
         networks:
+          - frontend
           - middleware
-        ports:
-          - "8002:8002"
         volumes:
-          - /media/arawlins/Backups/DataSources/geoserver_data/FuelModels/:/FuelModels/
+          - /Scratch/DataSources/geoserver_data/FuelModels/:/FuelModels/
         depends_on:
           - pipeline
           - geoserver
+        environment:
+          - VIRTUAL_HOST=api.landscapefuelmoisture.bushfirebehaviour.net.au
+          - VIRTUAL_PORT=8002
     
     # LFMCv1 Website #NodeJS #Angular4
-    # webserver:
-    #     image: anthonyrawlinsuom/lfmc-staging
-    #     build: lfmc-staging
+    webserver:
+        image: anthonyrawlinsuom/lfmc-staging:latest
+        restart: on-failure
+        command: node app.js
+        networks:
+          - frontend
+          - middleware
+        depends_on:
+          - api
+          - geoserver
+        environment:
+          - VIRTUAL_HOST=landscapefuelmoisture.bushfirebehaviour.net.au
+          - VIRTUAL_PORT=3000
+          
+    # LFMCv1 Website Development
+    # development:
+    #     image: anthonyrawlinsuom/lfmc-staging:latest
     #     restart: on-failure
+    #     command: npm start
     #     # deploy:
     #     #    endpoint_mode: vip
     #     #    replicas: 5
     #     networks:
     #       - frontend
     #       - middleware
-    #     ports:
-    #       - "3000:3000"
     #     depends_on:
     #       - api
     #       - geoserver
+    #     environment:
+    #       - VIRTUAL_HOST=dev.landscapefuelmoisture.bushfirebehaviour.net.au
+    #       - VIRTUAL_PORT=4200
     
     # ReadTheDocs
     documentation:
         # image: anthonyrawlinsuom/lfmc-docs
         image: anthonyrawlinsuom/lfmc-docs
-        command: serve -a 0.0.0.0:8000
+        command: serve -a 0.0.0.0:8001
         restart: on-failure
         networks:
           - frontend
-        ports:
-          - "8000:8000"
+        environment:
+          - VIRTUAL_HOST=documentation.landscapefuelmoisture.bushfirebehaviour.net.au
+          - VIRTUAL_PORT=8001
 
+    simplifyr:
+        image: anthonyrawlinsuom/lfmc-simplifyr:latest
+        volumes:
+          - /Scratch/DataSources/geoserver_data/FuelModels/queries:/home/docker/rserve/data:ro
+        networks:
+          - frontend
+        environment:
+          - VIRTUAL_HOST=simplifyr.landscapefuelmoisture.bushfirebehaviour.net.au
+          - VIRTUAL_PORT=8003
+          
+    cdn:
+        build: docker-nginx-simple
+        restart: always
+        networks:
+          - frontend
+        volumes:
+          - /Scratch/DataSources/geoserver_data/FuelModels/queries:/var/www:ro
+        depends_on:
+          - webserver
+        environment:
+          - VIRTUAL_HOST=cdn.landscapefuelmoisture.bushfirebehaviour.net.au
+          - VIRTUAL_PORT=8088
+          - PORT=8088
+      
 volumes:
     docs_dir:
         

@@ -67,7 +67,16 @@ install:
 	cd lfmc-docs && make install
 	cd lfmc-api && make install
 	echo "[OK] Ready to Run with 'docker-compose up'."
-	
+
+release:
+	echo "[Releasing] LFMC Project."
+	cd lfmc-pipeline && make release
+	cd lfmc-staging && make release
+	cd lfmc-docs && make release
+	cd lfmc-api && make release
+	./release.sh
+	echo "[OK] Release Complete."
+
 clean:
 #	docker-compose down
 #	docker stop anthonyrawlinsuom/lfmc-api
